@@ -15,8 +15,10 @@ questions with expectations on answers).
 that check for an expected word or words, a number, or an abstention. You run it after building,
 and rerun after any update to monitor changes in performance.
 
-**Where it stands:** first slice (graders and runner). It has only been run on a fake assistant
-with scripted answers so far, not on a real model.
+**Where it stands:** first slice (graders and runner). The example here runs on a fake assistant
+with scripted answers. First real use:
+[eval-flagged-payments](https://github.com/BassmaSH/eval-flagged-payments), three Mistral models
+and Claude on 32 cases.
 
 ## The table it prints
 
