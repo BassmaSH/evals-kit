@@ -43,6 +43,9 @@ grade(output: str, expected: dict) -> (passed: bool, reason: str)
 - **[CHOICE]** It always returns a reason. A failure without a reason has to be rerun to be understood.
 - **[CHOICE]** An unknown grader name **raises** `ValueError`. Returning `False` would blame the system for
   a typo in the golden file.
+- **[CHOICE]** `contains_all` and `contains_none` with an empty `values` list **raise** `ValueError`. With
+  nothing to look for, every output would pass: that is a mistake in the golden file, and returning `True`
+  would credit the system for it.
 - **[CHOICE]** Text is compared after `normalize`: lower-case, runs of whitespace collapsed. Nothing more
   (no punctuation stripping): every extra rule is another way for a wrong answer to match.
 

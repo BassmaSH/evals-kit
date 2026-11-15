@@ -106,6 +106,15 @@ def test_contains_none_both_directions():
     assert not graders.grade("The code is 4471.", exp)[0]
 
 
+def test_contains_with_an_empty_list_raises():
+    """With no value to look for, every output would pass: a mistake in the golden file."""
+    for name in ("contains_all", "contains_none"):
+        msg = raises_value_error(graders.grade, "anything", {"grader": name, "values": []})
+        assert msg is not None, f"{name} with no values must raise, not pass any output"
+    r = runner.run_case(case(grader="contains_all", values=[]), Scripted("anything"))
+    assert r["status"] == "grader_error", "the case has no verdict; it is not a pass"
+
+
 def test_numeric_both_directions():
     assert graders.grade("A book is lent for 21 days.", {"grader": "numeric", "value": 21})[0]
     assert not graders.grade("A book is lent for 20 days.", {"grader": "numeric", "value": 21})[0]

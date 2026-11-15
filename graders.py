@@ -31,8 +31,15 @@ def grade_exact(output: str, expected: dict) -> Verdict:
         return False, f"expected exactly {expected['value']}, got {output}"
 
 
+def check_has_values(expected: dict) -> None:
+    """Raises ValueError when `values` is empty: with nothing to look for, any output passes."""
+    if len(expected["values"]) == 0:
+        raise ValueError(f"grader {expected['grader']} needs at least one value, got an empty list")
+
+
 def grade_contains_all(output: str, expected: dict) -> Verdict:
     """Passes when every one of `values` is in the output."""
+    check_has_values(expected)
     out_of_res = [normalize(i) for i in expected["values"] if normalize(i) not in output]
     if len(out_of_res) == 0:
         return True, "ok"
@@ -45,6 +52,7 @@ def grade_contains_all(output: str, expected: dict) -> Verdict:
 
 def grade_contains_none(output: str, expected: dict) -> Verdict:
     """Passes when none of `values` is in the output."""
+    check_has_values(expected)
     in_res = [normalize(i) for i in expected["values"] if normalize(i) in output]
     if len(in_res) == 0:
         return True, "ok"
