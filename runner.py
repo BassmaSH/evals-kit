@@ -86,7 +86,12 @@ def run_case(
 
     Returns:
         The id, the slice, the status and every attempt, in the shape SPEC.md §3 gives.
+
+    Raises:
+        ValueError: `max_attempts` is below 1. A failing case would then never reach `fail`.
     """
+    if max_attempts < 1:
+        raise ValueError(f"max_attempts must be at least 1, got {max_attempts}")
     attempts = []
     infra_retries = 0
     grades = 0

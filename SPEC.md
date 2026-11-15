@@ -93,6 +93,8 @@ For each case, repeat until a status is reached:
 - **[CHOICE]** Every attempt is kept, with its output and reason, including the ones a retry later hid.
 - **[CHOICE]** `grade` is a parameter of `run_case` with the real grader as default, so a test can pass its own.
 - **[CONVENTION]** Defaults `max_attempts=2`, `max_infra_retries=2`; the status names; no waiting between retries.
+  `max_attempts` below 1 raises `ValueError` before the system is called: no answer could be graded, so a
+  failing case would never reach a status.
 
 Result of one case: `{"id", "slice", "status", "attempts": [{"kind", "output", "passed", "reason"}, …]}`
 with `kind` in `graded` / `infra` / `grader_error`; `output` is `None` for `infra`; `passed` is `None` unless

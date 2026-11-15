@@ -282,6 +282,17 @@ def test_model_failure_uses_all_attempts_and_keeps_reasons():
     assert first["reason"].strip(), "keep the first attempt's failure reason"
 
 
+def test_max_attempts_below_one_is_rejected_before_any_call():
+    """With max_attempts=0 a failing case would never reach `fail`: the loop would not end.
+
+    The script stops answering after five wrong answers, so that this test ends either way.
+    """
+    system = Scripted("no", "no", "no", "no", "no", RuntimeError("the test would never end"))
+    msg = raises_value_error(lambda: runner.run_case(case(), system, max_attempts=0))
+    assert msg is not None, "max_attempts=0 must be refused, not looped on"
+    assert len(system.calls) == 0, "refused before the system is called"
+
+
 def test_infra_error_is_not_a_model_failure():
     """The call timed out once, then the system answered correctly, first time it was heard."""
     system = Scripted(TimeoutError("30 s"), "yes")
