@@ -1,7 +1,7 @@
 """evals-kit slice 1 — graders. Contract: SPEC.md §2. Written from a blank file, Sat Oct 3.
 
 grade(output: str, expected: dict) -> (passed: bool, reason: str)
-Check: python test_runner.py   (the first ten lines are the grader tests)
+Check: python test_runner.py   (the first twelve lines are the grader tests)
 """
 
 import re

@@ -71,8 +71,9 @@ judge model, latency and cost per call, baseline, pass threshold.
 Python 3.12 or later, standard library only.
 
 ```bash
-python test_runner.py   # 32 checks on the graders and the runner
+python test_runner.py   # 39 checks on the graders and the runner
 python runner.py        # the example: 12 cases through a fake assistant
+pip install .           # optional: makes `graders` and `runner` importable from another project
 ```
 
 To test your own system: write a function that takes a question (a string) and returns an answer (a
