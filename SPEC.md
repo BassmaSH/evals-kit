@@ -51,7 +51,7 @@ grade(output: str, expected: dict) -> (passed: bool, reason: str)
 | `exact` | `value` | the whole output equals `value` | fails free text; for constrained outputs only |
 | `contains_all` | `values` | every value is in the output | says nothing about what else is in the output |
 | `contains_none` | `values` | no value is in the output | an empty output passes |
-| `numeric` | `value`, `tol` (default 0) | some number in the output is within `tol` of `value` | any number can match; `10:00` reads as 10 and 0 |
+| `numeric` | `value`, `tol` (default 0) | some number in the output is within `tol` of `value` | any number can match; `10:00` reads as 10 and 0; `10-12` reads as 10 and −12, so a range or a date written with hyphens matches a negative value and misses the positive one |
 | `abstains` | — | the output contains a refusal phrase from a fixed list | English only; "I don't know, but probably…" passes |
 
 **[CONVENTION]** the five names and their argument names. **[CHOICE]** which five: enough for facts, numbers,

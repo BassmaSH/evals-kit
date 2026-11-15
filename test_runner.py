@@ -121,6 +121,13 @@ def test_numeric_tolerance_and_thousands_separator():
     assert graders.grade(str(0.1 + 0.2), {"grader": "numeric", "value": 0.3})[0]
 
 
+def test_numeric_reads_a_hyphen_before_a_number_as_a_minus_sign():
+    """A stated limit (SPEC §2), pinned here so that a change to it is a decision."""
+    assert graders.grade("between 10-12 items", {"grader": "numeric", "value": -12})[0]
+    assert not graders.grade("between 10-12 items", {"grader": "numeric", "value": 12})[0]
+    assert graders.grade("between 10 and 12 items", {"grader": "numeric", "value": 12})[0]
+
+
 def test_abstains_both_directions():
     assert graders.grade("I don't have that information.", {"grader": "abstains"})[0]
     assert not graders.grade("Parking is free behind the building.", {"grader": "abstains"})[0]
