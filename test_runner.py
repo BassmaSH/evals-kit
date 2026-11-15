@@ -26,6 +26,7 @@ EXAMPLE = os.path.join(HERE, "examples", "golden_example.jsonl")
 
 # ---------------------------------------------------------------- helpers
 
+
 def case(id="c1", slice="s", grader="exact", **expected):
     """A golden case. Default: the right answer is exactly "yes"."""
     exp = {"grader": grader}
@@ -35,7 +36,9 @@ def case(id="c1", slice="s", grader="exact", **expected):
 
 class Scripted:
     """A system under test that replays a list: strings are answers, exceptions are raised.
-    The last step repeats. It records every call it receives."""
+
+    The last step repeats. It records every call it receives.
+    """
 
     def __init__(self, *steps):
         self.steps = steps
@@ -50,9 +53,8 @@ class Scripted:
 
 
 def write_jsonl(text):
-    f = tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False, encoding="utf-8")
-    f.write(text)
-    f.close()
+    with tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False, encoding="utf-8") as f:
+        f.write(text)
     return f.name
 
 
@@ -68,10 +70,14 @@ def approx(a, b):
     return a is not None and abs(a - b) < 1e-9
 
 
-LINE = '{"id": "%s", "slice": "s", "input": "q", "expected": {"grader": "exact", "value": "a"}, "source": "doc"}'
+LINE = (
+    '{"id": "%s", "slice": "s", "input": "q", '
+    '"expected": {"grader": "exact", "value": "a"}, "source": "doc"}'
+)
 
 
 # ---------------------------------------------------------------- graders
+
 
 def test_grade_returns_bool_and_reason():
     passed, reason = graders.grade("yes", {"grader": "exact", "value": "yes"})
@@ -121,14 +127,19 @@ def test_abstains_both_directions():
 
 
 def test_empty_output_does_not_crash():
-    for exp in ({"grader": "exact", "value": "x"}, {"grader": "contains_all", "values": ["x"]},
-                {"grader": "numeric", "value": 1}, {"grader": "abstains"}):
+    for exp in (
+        {"grader": "exact", "value": "x"},
+        {"grader": "contains_all", "values": ["x"]},
+        {"grader": "numeric", "value": 1},
+        {"grader": "abstains"},
+    ):
         assert graders.grade("", exp)[0] is False, exp
 
 
 def test_unknown_grader_raises_value_error():
-    assert raises_value_error(graders.grade, "x", {"grader": "no_such_grader"}) is not None, \
+    assert raises_value_error(graders.grade, "x", {"grader": "no_such_grader"}) is not None, (
         "a typo in the golden file must raise, not return False (that would blame the system)"
+    )
 
 
 def test_graders_are_pure():
@@ -141,6 +152,7 @@ def test_graders_are_pure():
 
 
 # ---------------------------------------------------------------- golden file
+
 
 def test_load_example():
     cases = runner.load_golden(EXAMPLE)
@@ -156,7 +168,9 @@ def test_load_skips_blank_lines():
 
 
 def test_load_rejects_missing_field_and_names_the_line():
-    path = write_jsonl(LINE % "a" + "\n" + '{"id": "b", "slice": "s", "input": "q", "expected": {}}\n')
+    path = write_jsonl(
+        LINE % "a" + "\n" + '{"id": "b", "slice": "s", "input": "q", "expected": {}}\n'
+    )
     msg = raises_value_error(runner.load_golden, path)
     assert msg is not None, "a case without `source` must be rejected at load time"
     assert "2" in msg, "the message should say which line"
@@ -164,7 +178,9 @@ def test_load_rejects_missing_field_and_names_the_line():
 
 def test_load_rejects_duplicate_id():
     path = write_jsonl(LINE % "a" + "\n" + LINE % "a" + "\n")
-    assert raises_value_error(runner.load_golden, path) is not None, "two cases with one id must be rejected"
+    assert raises_value_error(runner.load_golden, path) is not None, (
+        "two cases with one id must be rejected"
+    )
 
 
 def test_load_rejects_invalid_json():
@@ -173,6 +189,7 @@ def test_load_rejects_invalid_json():
 
 
 # ---------------------------------------------------------------- one case
+
 
 def test_pass_on_first_try_calls_the_system_once():
     system = Scripted("yes")
@@ -186,8 +203,9 @@ def test_system_sees_the_input_and_nothing_else():
     system = Scripted("yes")
     c = case()
     runner.run_case(c, system)
-    assert system.calls[0] == ((c["input"],), {}), \
+    assert system.calls[0] == ((c["input"],), {}), (
         "the system gets the input string only; handing it `expected` would leak the answer"
+    )
 
 
 def test_retry_changes_final_but_not_pass_first():
@@ -252,7 +270,9 @@ def test_grader_that_raises():
 
     system = Scripted("yes")
     r = runner.run_case(case(), system, grade=boom)
-    assert r["status"] == "grader_error", "not 'fail' (the system did nothing wrong), not 'infra_error'"
+    assert r["status"] == "grader_error", (
+        "not 'fail' (the system did nothing wrong), not 'infra_error'"
+    )
     assert len(system.calls) == 1, "do not retry: the same grader fails the same way"
     assert "RuntimeError" in r["attempts"][-1]["reason"]
 
@@ -265,11 +285,13 @@ def test_grader_that_raises():
 def test_unknown_grader_name_is_a_grader_error_and_the_run_goes_on():
     cases = [case("typo", grader="exactt", value="yes"), case("ok")]
     results = runner.run(cases, Scripted("yes"))
-    assert [r["status"] for r in results] == ["grader_error", "pass_first"], \
+    assert [r["status"] for r in results] == ["grader_error", "pass_first"], (
         "a typo in one case's grader name must not fail that case or stop the next one"
+    )
 
 
 # ---------------------------------------------------------------- summary and table
+
 
 def test_per_slice_rows_and_all_row():
     results = [
@@ -290,8 +312,9 @@ def test_slice_with_no_graded_case_reports_none_not_zero():
     dead = runner.run_case(case("dead", "empty"), Scripted(TimeoutError("30 s")))
     row = runner.summarize([dead])["empty"]
     assert row["n"] == 1 and row["graded"] == 0, "a case that ended in infra_error is not graded"
-    assert row["pass_first"] is None and row["final"] is None, \
+    assert row["pass_first"] is None and row["final"] is None, (
         "0.0 would say the system failed; the truth is that nothing was measured"
+    )
     table = runner.format_table(runner.summarize([dead]))
     assert "n/a" in table
 
@@ -304,8 +327,10 @@ def test_no_results_at_all():
 
 
 def test_table_has_the_columns_and_the_slices():
-    results = [runner.run_case(case("a1", "alpha"), Scripted("yes")),
-               runner.run_case(case("b1", "beta"), Scripted("no"))]
+    results = [
+        runner.run_case(case("a1", "alpha"), Scripted("yes")),
+        runner.run_case(case("b1", "beta"), Scripted("no")),
+    ]
     table = runner.format_table(runner.summarize(results))
     for word in ("pass@1st", "final", "infra", "alpha", "beta", "ALL"):
         assert word in table, word
@@ -324,10 +349,13 @@ def test_exit_code():
     failed = runner.run_case(case("f"), Scripted("no"))
     dead = runner.run_case(case("d"), Scripted(TimeoutError("30 s")))
     assert runner.exit_code([passed, failed]) == 0, "a model failure is a result, not a broken run"
-    assert runner.exit_code([passed, dead]) == 2, "a case with no verdict: this run is not a baseline"
+    assert runner.exit_code([passed, dead]) == 2, (
+        "a case with no verdict: this run is not a baseline"
+    )
 
 
 # ---------------------------------------------------------------- end to end
+
 
 def test_example_end_to_end():
     """The 12 library cases through the fake system. Your table must match SPEC.md §7."""
@@ -337,8 +365,12 @@ def test_example_end_to_end():
     status = {r["id"]: r["status"] for r in results}
     not_clean = {k: v for k, v in status.items() if v != "pass_first"}
     # rules-03 timed out once and then answered correctly, so it is NOT in this list.
-    assert not_clean == {"hours-03": "fail", "rules-02": "pass_retry",
-                         "oos-02": "infra_error", "oos-03": "fail"}, not_clean
+    assert not_clean == {
+        "hours-03": "fail",
+        "rules-02": "pass_retry",
+        "oos-02": "infra_error",
+        "oos-03": "fail",
+    }, not_clean
     s = runner.summarize(results)
     assert approx(s["hours"]["pass_first"], 3 / 4) and approx(s["hours"]["final"], 3 / 4)
     assert approx(s["rules"]["pass_first"], 4 / 5) and approx(s["rules"]["final"], 1.0)
@@ -350,8 +382,11 @@ def test_example_end_to_end():
 
 # ---------------------------------------------------------------- run without pytest
 
+
 def main():
-    tests = [(name, fn) for name, fn in globals().items() if name.startswith("test_") and callable(fn)]
+    tests = [
+        (name, fn) for name, fn in globals().items() if name.startswith("test_") and callable(fn)
+    ]
     print(f"testing runner.py and graders.py: {len(tests)} checks")
     failed = 0
     for name, fn in tests:
@@ -361,7 +396,10 @@ def main():
         except Exception as e:  # an AssertionError, or a crash inside the code under test
             failed += 1
             where = traceback.extract_tb(e.__traceback__)[-1]
-            print(f"  [FAIL] {name}\n         {type(e).__name__}: {e} (line {where.lineno} of {os.path.basename(where.filename)})")
+            print(
+                f"  [FAIL] {name}\n         {type(e).__name__}: {e} "
+                f"(line {where.lineno} of {os.path.basename(where.filename)})"
+            )
     print("\nALL PASS" if not failed else f"\n{failed} failed. Fix and rerun.")
     sys.exit(0 if not failed else 1)
 

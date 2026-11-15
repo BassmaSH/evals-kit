@@ -56,4 +56,5 @@ max-args = 6
 max-statements = 40
 
 [tool.ruff.lint.per-file-ignores]
-"test_runner.py" = ["D103", "ANN"]  # a test's name is its description, and it returns nothing
+# A test's name is its description, and it returns nothing.
+"test_runner.py" = ["D102", "D103", "ANN"]
