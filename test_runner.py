@@ -188,6 +188,38 @@ def test_load_rejects_invalid_json():
     assert raises_value_error(runner.load_golden, path) is not None
 
 
+def test_load_rejects_unknown_grader_name_and_names_the_line():
+    path = write_jsonl(LINE % "a" + "\n" + (LINE % "b").replace('"exact"', '"exactt"') + "\n")
+    msg = raises_value_error(runner.load_golden, path)
+    assert msg is not None, "a typo in a grader name must be caught before the run (SPEC §1)"
+    assert "2" in msg and "exactt" in msg, "the message should say which line and which name"
+
+
+def test_load_rejects_expected_without_a_grader_name():
+    for expected in ('{"value": "a"}', '"exact"'):
+        line = '{"id": "a", "slice": "s", "input": "q", "expected": %s, "source": "doc"}' % expected
+        msg = raises_value_error(runner.load_golden, write_jsonl(line + "\n"))
+        assert msg is not None and "1" in msg, expected
+
+
+def test_load_accepts_the_names_of_another_grade_function():
+    """An eval that passes its own `grade` to `run` gives `load_golden` that function's names."""
+    path = write_jsonl((LINE % "a").replace('"exact"', '"decision"') + "\n" + LINE % "b" + "\n")
+    assert raises_value_error(runner.load_golden, path) is not None, "not one of the kit's five"
+    cases = runner.load_golden(path, grader_names=[*graders.GRADERS, "decision"])
+    assert [c["id"] for c in cases] == ["a", "b"]
+    assert len(runner.load_golden(path, grader_names=None)) == 2, "None: the names are not checked"
+
+
+def test_grader_name_that_is_not_text_is_rejected_like_an_unknown_name():
+    """A list or a number as the name is a mistake in the golden file: ValueError, as for a typo."""
+    for name in ('["exact"]', "3", "null"):
+        line = (LINE % "a").replace('"exact"', name)
+        msg = raises_value_error(runner.load_golden, write_jsonl(line + "\n"))
+        assert msg is not None and "1" in msg, name
+    assert raises_value_error(graders.grade, "x", {"grader": ["exact"], "value": "x"}) is not None
+
+
 # ---------------------------------------------------------------- one case
 
 

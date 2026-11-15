@@ -25,8 +25,11 @@ One JSON object per line (`.jsonl`), five required fields:
 - **[CHOICE]** `source` is required. An expected answer that cannot be traced cannot be defended.
 - **[CHOICE]** `expected` names its own grader, per case. The alternative is one grader per slice: fewer
   words in the file, but a slice then cannot mix a number check and an abstention check.
-- **[CHOICE]** `load_golden` validates and raises `ValueError` (missing field, duplicate id, invalid JSON),
-  naming the line. A bad case is caught before the run, never skipped silently.
+- **[CHOICE]** `load_golden` validates and raises `ValueError` (missing field, duplicate id, invalid JSON,
+  unknown grader name), naming the line. A bad case is caught before the run, never skipped silently.
+- **[CHOICE]** The grader names accepted are a parameter, `grader_names`, with the five of §2 as default,
+  like `grade` in `run_case`. An eval that passes its own `grade` passes that function's names, or `None`
+  to leave the names unchecked. Only the name is checked at load time, not the grader's arguments.
 - **[CONVENTION]** JSONL; blank lines ignored; file order kept; the slice name `ALL` is reserved.
 
 ## 2. Graders (`graders.py`)
@@ -120,8 +123,9 @@ Per slice, and for `ALL`:
 
 ```
 graders.grade(output, expected) -> (bool, str)
+graders.GRADERS                                     # grader name -> function, the five of §2
 
-runner.load_golden(path) -> list[dict]
+runner.load_golden(path, grader_names=GRADERS) -> list[dict]
 runner.run_case(case, system, grade=grade, max_attempts=2, max_infra_retries=2) -> dict
 runner.run(cases, system, grade=grade, max_attempts=2, max_infra_retries=2) -> list[dict]
 runner.summarize(results) -> dict[str, dict]        # slice name -> row of §4, plus "ALL" when there are results

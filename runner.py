@@ -7,26 +7,31 @@ counter it would be pass_retry, so pass@1st would change with the network and no
 
 import json
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 
-from graders import Verdict, grade
+from graders import GRADERS, Verdict, grade
 
 System = Callable[[str], str]  # the system under test: input text -> output text; may raise
 Grader = Callable[[str, dict], Verdict]  # (output, expected) -> (passed, reason)
 
 
-def load_golden(path: str | os.PathLike) -> list[dict]:
+def load_golden(
+    path: str | os.PathLike, grader_names: Collection[str] | None = GRADERS
+) -> list[dict]:
     """Reads a golden file (SPEC.md §1): one JSON object per line, blank lines ignored.
 
     Args:
         path: The `.jsonl` file.
+        grader_names: The names `expected.grader` may take. The kit's own by default, to go
+            with the default `grade` of `run`. An eval that passes its own `grade` passes that
+            function's names here, or None to leave the names unchecked.
 
     Returns:
         The cases, in file order.
 
     Raises:
-        ValueError: A line is not JSON, lacks a required field, repeats an id, or uses the
-            reserved slice name ALL.
+        ValueError: A line is not JSON, lacks a required field, repeats an id, uses the
+            reserved slice name ALL, or names a grader that is not in `grader_names`.
     """
     with open(path) as f:
         ids = set()
@@ -46,9 +51,21 @@ def load_golden(path: str | os.PathLike) -> list[dict]:
                     raise ValueError(f"line {n} duplicate id")
                 if j["slice"] == "ALL":
                     raise ValueError("slice name ALL reserved")
+                if grader_names is not None:
+                    check_grader_name(j["expected"], n, grader_names)
                 ids.add(j["id"])
                 cases.append(j)
     return cases
+
+
+def check_grader_name(expected: object, n: int, grader_names: Collection[str]) -> None:
+    """Raises ValueError when `expected`, read on line n, does not name a known grader."""
+    if not isinstance(expected, dict) or "grader" not in expected:
+        raise ValueError(f"line {n} expected has no grader name")
+    if expected["grader"] not in list(grader_names):  # a list: see the same lookup in `grade`
+        raise ValueError(
+            f"line {n} unknown grader {expected['grader']}, not one of {list(grader_names)}"
+        )
 
 
 def run_case(
