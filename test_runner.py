@@ -6,7 +6,8 @@ or, with pytest:
     pytest test_runner.py
 
 The tests use plain asserts and no pytest feature, so both ways run the same checks.
-Scaffold generated with an assistant; the code under test is mine.
+Scaffold generated with an assistant; the code under test is mine, apart from the additions
+listed in the README's honest note.
 """
 
 import copy

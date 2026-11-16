@@ -85,3 +85,8 @@ string), write your cases in the format of `examples/golden_example.jsonl`, and 
 Built as self-study. The contract (`SPEC.md`), the tests, the fake assistant and the example cases
 were generated with Claude; `graders.py` and `runner.py` are written from that contract with
 the tests as the check. 
+
+A review in November 2026 added the packaging, type hints and docstrings, the `GRADERS` table,
+three input checks and seven tests. These were written with Claude Code, following guidelines I
+defined beforehand. The logic of each grader and of the runner loop is unchanged from the
+hand-written version.

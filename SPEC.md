@@ -4,7 +4,7 @@ A small tool that sends a set of questions with known answers (a *golden set*) t
 each output with code, and reports per slice how often the system was right. Generic: nothing in it knows
 what the system is about. Python, standard library only.
 
-**Written by hand:** `graders.py` and `runner.py` (the README's honest note says which files were generated).
+**Written by hand:** `graders.py` and `runner.py` (the README's honest note says which files were generated, and what a review in November 2026 added).
 **Boilerplate, generated with an assistant:** `fake_system.py`, `examples/`, `test_runner.py`, and this contract.
 
 Every rule below is tagged **[CHOICE]** (a design decision: another option exists, and you should be able to
