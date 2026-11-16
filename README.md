@@ -33,8 +33,7 @@ $ python runner.py
 exit 2
 ```
 
-A slice is a type of question. Questions are separated in slices to account for different precision targets
-and volumes for different types of questions hidden by the average would hide that.
+A slice is a type of question.
 
 `graded` can be smaller than `n`: on the `out_of_scope` line one call ended in an infra error (the
 call crashed, so there was no answer). It is left out of the rate because otherwise it would

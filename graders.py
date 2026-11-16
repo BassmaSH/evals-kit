@@ -1,4 +1,4 @@
-"""evals-kit slice 1 — graders. Contract: SPEC.md §2. Written from a blank file, Sat Oct 3.
+"""evals-kit slice 1 — graders. Contract: SPEC.md §2. Written by hand by the author, Oct 3, 2026.
 
 grade(output: str, expected: dict) -> (passed: bool, reason: str)
 Check: python test_runner.py   (the first twelve lines are the grader tests)

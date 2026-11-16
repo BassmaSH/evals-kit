@@ -144,8 +144,7 @@ prints the table is boilerplate. The CLI proper is slice 2.
 ## 6. Not in slice 1
 
 A judge model, latency and cost per call, waiting between retries, several trials per case with a standard
-error, a committed baseline and a comparison between two runs, a pass threshold (a gate). Each one is a
-question an interviewer can ask as "what is missing?".
+error, a committed baseline and a comparison between two runs, a pass threshold (a gate).
 
 ## 7. Tests: command and output
 
