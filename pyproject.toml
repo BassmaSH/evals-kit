@@ -1,0 +1,60 @@
+# Packaging, style and lint settings. See CONTRIBUTING.md for the guidelines these rules check.
+#   pip install .        installs the two modules, `graders` and `runner`
+#   ruff format .        rewrites the files in the agreed style
+#   ruff check .         reports what breaks a rule
+[build-system]
+requires = ["setuptools>=77"]  # the first version that reads `license = "MIT"`
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "evals-kit"
+version = "0.1.0"
+description = "A small generic eval runner: a golden set, five code graders, a table per slice."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.12"  # the f-strings reuse the same quotes inside, which 3.12 allows
+dependencies = []           # standard library only
+
+[project.urls]
+Repository = "https://github.com/BassmaSH/evals-kit"
+
+[tool.setuptools]
+# The files stay in the root, so they are listed by name. The fake assistant and the tests are
+# for the example and are not installed.
+py-modules = ["graders", "runner"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E", "W", "F",  # basic errors and style
+    "I",            # import order
+    "N",            # naming
+    "D",            # docstrings
+    "ANN",          # type hints on every function
+    "B", "SIM",     # likely bugs, needless complexity
+    "C90",          # a function with too many branches
+    "PLR0913",      # a function with too many arguments
+    "PLR0915",      # a function with too many statements
+    "PLW0603",      # a function that changes a module-level variable
+]
+ignore = [
+    "D105", "D107",  # __init__ and __call__ are documented in the class docstring
+    "D203", "D213",  # two docstring layouts that conflict with the ones kept (D211, D212)
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+max-args = 6
+max-statements = 40
+
+[tool.ruff.lint.per-file-ignores]
+# A test's name is its description, and it returns nothing.
+"test_runner.py" = ["D102", "D103", "ANN"]

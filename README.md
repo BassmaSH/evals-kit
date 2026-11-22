@@ -33,8 +33,7 @@ $ python runner.py
 exit 2
 ```
 
-A slice is a type of question. Questions are separated in slices to account for different precision targets
-and volumes for different types of questions hidden by the average would hide that.
+A slice is a type of question.
 
 `graded` can be smaller than `n`: on the `out_of_scope` line one call ended in an infra error (the
 call crashed, so there was no answer). It is left out of the rate because otherwise it would
@@ -71,8 +70,9 @@ judge model, latency and cost per call, baseline, pass threshold.
 Python 3.12 or later, standard library only.
 
 ```bash
-python test_runner.py   # 32 checks on the graders and the runner
+python test_runner.py   # 39 checks on the graders and the runner
 python runner.py        # the example: 12 cases through a fake assistant
+pip install .           # optional: makes `graders` and `runner` importable from another project
 ```
 
 To test your own system: write a function that takes a question (a string) and returns an answer (a
@@ -85,3 +85,8 @@ string), write your cases in the format of `examples/golden_example.jsonl`, and 
 Built as self-study. The contract (`SPEC.md`), the tests, the fake assistant and the example cases
 were generated with Claude; `graders.py` and `runner.py` are written from that contract with
 the tests as the check. 
+
+A review in November 2026 added the packaging, type hints and docstrings, the `GRADERS` table,
+three input checks and seven tests. These were written with Claude Code, following guidelines I
+defined beforehand. The logic of each grader and of the runner loop is unchanged from the
+hand-written version.

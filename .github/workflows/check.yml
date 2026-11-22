@@ -1,0 +1,26 @@
+# Runs on every push and pull request: style, lint, the checks both ways, the install, the example.
+name: check
+on: [push, pull_request]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff==0.17.5 pytest
+      - run: ruff format --check .
+      - run: ruff check .
+      - run: python test_runner.py
+      - run: pytest -q
+      - name: The kit installs, and imports from outside the repo
+        run: |
+          pip install .
+          cd "$RUNNER_TEMP"
+          python -c "import graders, runner"
+      - name: The example prints its table and exits 2 (one case never gets an answer)
+        run: |
+          code=0
+          python runner.py || code=$?
+          test "$code" -eq 2

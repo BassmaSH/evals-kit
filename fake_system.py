@@ -27,7 +27,10 @@ SCRIPT = {
     "Until what time is the library open on a Wednesday?": ["Until 19:00."],
     "For how many days is a book lent?": ["A book is lent for 21 days."],
     "How many items can I have on loan at once?": ["Up to 10 items.", "Up to 12 items."],
-    "What is the fine per day for a late book?": [TimeoutError("no reply after 30 s"), "The fine is 0.20 per day."],
+    "What is the fine per day for a late book?": [
+        TimeoutError("no reply after 30 s"),
+        "The fine is 0.20 per day.",
+    ],
     "What is the highest fine I can get for one item?": ["At most 6.00 for one item."],
     "Answer yes or no, one word: can a reserved item be renewed?": ["No"],
     "Where can I park near the library?": ["I don't have that information in the handbook."],
@@ -39,11 +42,14 @@ FALLBACK = "I don't have that information."
 
 
 class FakeLibraryAssistant:
-    def __init__(self, script=None):
+    """A system under test that replays `SCRIPT`, or the script it is given."""
+
+    def __init__(self, script: dict[str, list] | None = None) -> None:
         self.script = SCRIPT if script is None else script
         self.calls = defaultdict(int)  # question -> how many times it was asked
 
-    def __call__(self, question):
+    def __call__(self, question: str) -> str:
+        """Returns the next scripted answer to this question, or raises the scripted error."""
         n = self.calls[question]
         self.calls[question] += 1
         steps = self.script.get(question, [FALLBACK])

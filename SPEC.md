@@ -4,7 +4,7 @@ A small tool that sends a set of questions with known answers (a *golden set*) t
 each output with code, and reports per slice how often the system was right. Generic: nothing in it knows
 what the system is about. Python, standard library only.
 
-**Written by hand:** `graders.py` and `runner.py` (the README's honest note says which functions were delegated).
+**Written by hand:** `graders.py` and `runner.py` (the README's honest note says which files were generated, and what a review in November 2026 added).
 **Boilerplate, generated with an assistant:** `fake_system.py`, `examples/`, `test_runner.py`, and this contract.
 
 Every rule below is tagged **[CHOICE]** (a design decision: another option exists, and you should be able to
@@ -25,8 +25,11 @@ One JSON object per line (`.jsonl`), five required fields:
 - **[CHOICE]** `source` is required. An expected answer that cannot be traced cannot be defended.
 - **[CHOICE]** `expected` names its own grader, per case. The alternative is one grader per slice: fewer
   words in the file, but a slice then cannot mix a number check and an abstention check.
-- **[CHOICE]** `load_golden` validates and raises `ValueError` (missing field, duplicate id, invalid JSON),
-  naming the line. A bad case is caught before the run, never skipped silently.
+- **[CHOICE]** `load_golden` validates and raises `ValueError` (missing field, duplicate id, invalid JSON,
+  unknown grader name), naming the line. A bad case is caught before the run, never skipped silently.
+- **[CHOICE]** The grader names accepted are a parameter, `grader_names`, with the five of §2 as default,
+  like `grade` in `run_case`. An eval that passes its own `grade` passes that function's names, or `None`
+  to leave the names unchecked. Only the name is checked at load time, not the grader's arguments.
 - **[CONVENTION]** JSONL; blank lines ignored; file order kept; the slice name `ALL` is reserved.
 
 ## 2. Graders (`graders.py`)
@@ -40,6 +43,9 @@ grade(output: str, expected: dict) -> (passed: bool, reason: str)
 - **[CHOICE]** It always returns a reason. A failure without a reason has to be rerun to be understood.
 - **[CHOICE]** An unknown grader name **raises** `ValueError`. Returning `False` would blame the system for
   a typo in the golden file.
+- **[CHOICE]** `contains_all` and `contains_none` with an empty `values` list **raise** `ValueError`. With
+  nothing to look for, every output would pass: that is a mistake in the golden file, and returning `True`
+  would credit the system for it.
 - **[CHOICE]** Text is compared after `normalize`: lower-case, runs of whitespace collapsed. Nothing more
   (no punctuation stripping): every extra rule is another way for a wrong answer to match.
 
@@ -48,7 +54,7 @@ grade(output: str, expected: dict) -> (passed: bool, reason: str)
 | `exact` | `value` | the whole output equals `value` | fails free text; for constrained outputs only |
 | `contains_all` | `values` | every value is in the output | says nothing about what else is in the output |
 | `contains_none` | `values` | no value is in the output | an empty output passes |
-| `numeric` | `value`, `tol` (default 0) | some number in the output is within `tol` of `value` | any number can match; `10:00` reads as 10 and 0 |
+| `numeric` | `value`, `tol` (default 0) | some number in the output is within `tol` of `value` | any number can match; `10:00` reads as 10 and 0; `10-12` reads as 10 and −12, so a range or a date written with hyphens matches a negative value and misses the positive one |
 | `abstains` | — | the output contains a refusal phrase from a fixed list | English only; "I don't know, but probably…" passes |
 
 **[CONVENTION]** the five names and their argument names. **[CHOICE]** which five: enough for facts, numbers,
@@ -87,6 +93,8 @@ For each case, repeat until a status is reached:
 - **[CHOICE]** Every attempt is kept, with its output and reason, including the ones a retry later hid.
 - **[CHOICE]** `grade` is a parameter of `run_case` with the real grader as default, so a test can pass its own.
 - **[CONVENTION]** Defaults `max_attempts=2`, `max_infra_retries=2`; the status names; no waiting between retries.
+  `max_attempts` below 1 raises `ValueError` before the system is called: no answer could be graded, so a
+  failing case would never reach a status.
 
 Result of one case: `{"id", "slice", "status", "attempts": [{"kind", "output", "passed", "reason"}, …]}`
 with `kind` in `graded` / `infra` / `grader_error`; `output` is `None` for `infra`; `passed` is `None` unless
@@ -120,8 +128,9 @@ Per slice, and for `ALL`:
 
 ```
 graders.grade(output, expected) -> (bool, str)
+graders.GRADERS                                     # grader name -> function, the five of §2
 
-runner.load_golden(path) -> list[dict]
+runner.load_golden(path, grader_names=GRADERS) -> list[dict]
 runner.run_case(case, system, grade=grade, max_attempts=2, max_infra_retries=2) -> dict
 runner.run(cases, system, grade=grade, max_attempts=2, max_infra_retries=2) -> list[dict]
 runner.summarize(results) -> dict[str, dict]        # slice name -> row of §4, plus "ALL" when there are results
@@ -135,16 +144,15 @@ prints the table is boilerplate. The CLI proper is slice 2.
 ## 6. Not in slice 1
 
 A judge model, latency and cost per call, waiting between retries, several trials per case with a standard
-error, a committed baseline and a comparison between two runs, a pass threshold (a gate). Each one is a
-question an interviewer can ask as "what is missing?".
+error, a committed baseline and a comparison between two runs, a pass threshold (a gate).
 
 ## 7. Tests: command and output
 
-The test file runs two ways with the same 32 checks: as a script (no dependency) or under pytest.
+The test file runs two ways with the same 39 checks: as a script (no dependency) or under pytest.
 
 ```
 $ python test_runner.py
-testing runner.py and graders.py: 32 checks
+testing runner.py and graders.py: 39 checks
   ...
 ALL PASS
 ```
